@@ -14,6 +14,6 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public String getUserIdByMobile(String mobile) {
-        return keycloakService.;
+        return keycloakService.getUserIdByMobilePhone(mobile);
     }
 }

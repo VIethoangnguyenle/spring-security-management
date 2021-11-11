@@ -1,6 +1,7 @@
 package com.hoang.springsecuritylearn.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.hoang.springsecuritylearn.core.validator.ValidPhoneNumber;
 import com.hoang.springsecuritylearn.core.validator.ValidRequireCustom;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import lombok.experimental.Accessors;
 public class UserRegisterDto {
 
     @ValidRequireCustom
+    @ValidPhoneNumber
     private String mobile;
 
     @ValidRequireCustom
