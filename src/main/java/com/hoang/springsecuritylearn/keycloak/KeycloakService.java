@@ -10,4 +10,5 @@ public interface KeycloakService {
     String getUserNameByUserId(String userId);
     AccessTokenRespCustom getUserJWT(String userId) throws VerificationException;
     void invalidateToken(RefreshTokenReq refreshTokenReq);
+    String getUserIdByMobilePhone(String mobile);
 }

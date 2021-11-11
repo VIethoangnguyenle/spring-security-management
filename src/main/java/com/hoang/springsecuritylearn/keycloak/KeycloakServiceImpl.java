@@ -4,6 +4,7 @@ import com.hoang.springsecuritylearn.core.dto.RestError;
 import com.hoang.springsecuritylearn.exception.RestBadRequestException;
 import com.hoang.springsecuritylearn.exception.RestException;
 import com.hoang.springsecuritylearn.keycloak.dto.RefreshTokenReq;
+import com.hoang.springsecuritylearn.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Slf4j
 public class KeycloakServiceImpl implements KeycloakService {
@@ -141,5 +143,13 @@ public class KeycloakServiceImpl implements KeycloakService {
     @Override
     public void invalidateToken(RefreshTokenReq refreshTokenReq) {
 
+    }
+
+    @Override
+    public String getUserIdByMobilePhone(String mobile) {
+        UsersResource usersResource = keycloakAdmin.realm(realm).users();
+        List<UserRepresentation> users = usersResource.search(mobile, true);
+        UserRepresentation userRepresentation = users.stream().filter(item-> item.getUsername().equals(mobile)).findFirst().orElse(null);
+        return userRepresentation != null ? userRepresentation.getId() : null;
     }
 }
