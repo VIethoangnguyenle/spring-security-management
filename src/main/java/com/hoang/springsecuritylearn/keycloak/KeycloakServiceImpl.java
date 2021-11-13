@@ -4,9 +4,7 @@ import com.hoang.springsecuritylearn.core.dto.RestError;
 import com.hoang.springsecuritylearn.exception.RestBadRequestException;
 import com.hoang.springsecuritylearn.exception.RestException;
 import com.hoang.springsecuritylearn.keycloak.dto.RefreshTokenReq;
-import com.hoang.springsecuritylearn.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.TokenVerifier;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -22,11 +20,19 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Slf4j
+@Service
 public class KeycloakServiceImpl implements KeycloakService {
     @Value("#{'${keycloak.credentials.secret}'.trim()}")
     String secretKey;
@@ -142,7 +148,23 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     @Override
     public void invalidateToken(RefreshTokenReq refreshTokenReq) {
+        MultiValueMap<String, String> requestParams = new LinkedMultiValueMap<>();
+        requestParams.add("client_id", "springboot-login");
+        requestParams.add("client_secret", secretKey);
+        requestParams.add("refresh_token", refreshTokenReq.getRefreshToken());
+        requestParams.add("revoke_tokens_on_logout ", "true");
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(requestParams, headers);
+        String url = authUrl + "/realms/" + realm + "/protocol/openid-connect/logout";
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            restTemplate.postForEntity(url, request, Object.class);
+        } catch (Exception e) {
+            log.error("error invalid token");
+        }
     }
 
     @Override
@@ -151,5 +173,10 @@ public class KeycloakServiceImpl implements KeycloakService {
         List<UserRepresentation> users = usersResource.search(mobile, true);
         UserRepresentation userRepresentation = users.stream().filter(item-> item.getUsername().equals(mobile)).findFirst().orElse(null);
         return userRepresentation != null ? userRepresentation.getId() : null;
+    }
+
+    @Override
+    public void setUserEmail(String userId, String email) {
+        keycloakAdmin.realm(realm).users().get(userId).toRepresentation().setEmail(email);
     }
 }
